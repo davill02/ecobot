@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<aiml version="2.0">
+    <category>
+        <pattern>INTRODUCTION</pattern>
+        <template>
+            <random>
+                <li>Привет, я бот для поиска лучшего места по экообразованию для тебя!</li>
+                <li>Привет, я создан для того, чтобы найти идеальное место для твоего экопросвещения!!</li>
+            </random>
+        </template>
+    </category>
+    <category>
+        <pattern>LOCATION * @</pattern>
+        <template>
+            <think><set name="requestNum"><star/></set></think>
+            <condition name="requestNum" value="1">
+                <random>
+                    <li>Для того, чтобы найти ближайшие учреждения, мне требуется узнать ближайший к тебе город. В каком городе ты живешь?</li>
+                    <li>В каком городе Беларуси ты проживаешь?</li>
+                    <li>Где ты живешь? P.S. Мне нужен только город</li>
+                    <li>Я живу в Минске. А где живешь ты?</li>
+                </random>
+            </condition>
+            <condition name="requestNum" value="2">
+                <random>
+                <li>Да, я знаю, уже задавал этот вопрос, но мне важно знать ближайший город. Так какой он?</li>
+                <li>Я так и не смог понять в каком городе ты живешь, можешь повторить? Его просто может не быть в моей базе данных(((</li>
+                <li>Ты так и не сказал, город в котором ты живешь или я его не разобрал, можешь повторить? Может в другом написании</li>
+                </random>
+            </condition>
+            <condition name="requestNum" value="3">
+                <random>
+                    <li>Я так и не разобрался с городом проживания. Попробуем еще раз?</li>
+                    <li>Мои алгоритмы не смогли распознать город. Попробуем снова ?</li>
+                    <li>Я не смог распознать город. Может у него есть другое название?</li>
+                </random>
+            </condition>
+        </template>
+    </category>
+    <category>
+        <pattern>LOCATION 3 @ * NAMED</pattern>
+        <template>
+            <think><set name="name"><star/></set></think>
+                    <random>
+                        <li><get name="name"/>, я так и не разобрался с городом проживания. Попробуем еще раз?</li>
+                        <li>Мои алгоритмы не смогли распознать город. Попробуем снова ,<get name="name"/>?</li>
+                    </random>
+        </template>
+    </category>
+    <category>
+        <pattern>FAMILIARITY</pattern>
+        <template>
+            <random>
+                <li>Познакомимся. Как тебя лучше называть?</li>
+                <li>Как лучше всего к тебе обращаться?</li>
+                <li>Важный вопрос. Как к тебе обращаться?</li>
+            </random>
+        </template>
+    </category>
+    <category>
+        <template>
+            <random>
+                <li>Я бот разрабатываемый в качестве дипломной работы студента 4 курса.</li>
+                <li>Я дипломная работа студента 4 курса с потока информатики.</li>
+            </random>
+            Мое предназначение найти лучшее место для твоего экообразования. И я с радостью это сделаю, но для начала.
+            <srai>FAMILIARITY</srai></template>
+        <pattern>ABOUT ME</pattern>
+    </category>
+    <category>
+        <pattern>GREETING #</pattern>
+        <template>
+            <random>
+                <li>Рад знакомству <star/></li>
+                <li>Бонжур, <star/></li>
+                <li>Добро пожаловать <star/></li>
+                <li>Мы найдем лучше место для тебя <star/></li>
+            </random>
+        </template>
+    </category>
+    <category>
+        <pattern>AIM</pattern>
+        <template>
+            Моя цель состоит в том, чтобы <random><li>развить сеть экопросвещения на территории Республики Беларусь</li><li>найти лучшее место для развития твоих знаний в <random><li>экологии</li><li>единственном способе спасти землю</li></random></li></random>
+        </template>
+    </category>
+    <category>
+        <pattern>COST * @</pattern>
+        <template>
+            <think><set name="requestNum"><star/></set></think>
+            <condition name="requestNum" value="1">
+                <random>
+                    <li>Готов ли ты потратить деньги на экообразование?</li>
+                    <li>Можно ли предложить курсы, где придется тратить деньги?</li>
+                    <li>Можешь ли ты вложить курсы в самообразование?</li>
+                </random>
+            </condition>
+            <condition name="requestNum" value="2">
+                    Я не уверен в твоем ответе, поэтому переспрошу:
+                    <random>
+                        <li>Готов ли ты потратить деньги на экообразование?</li>
+                        <li>Можно ли предложить курсы, где придется тратить деньги?</li>
+                        <li>Можешь ли ты вложить курсы в самообразование?</li>
+                    </random>
+            </condition>
+        </template>
+    </category>
+    <category>
+        <pattern>TIME</pattern>
+        <template>
+            <random>
+                <li><random><li>Сколько времени </li><li>Сколько часов </li></random>в неделю ты готов уделить?</li>
+                <li>Какое количество времени ты готов потратить на образование в неделю?</li>
+                <li>Как много времени ты можешь уделить экообразованию в неделю?</li>
+                <li>Сколько времени в неделю ты можешь провести за обучением?</li>
+                <li>Как много часов в неделю ты сможешь потратить на образование?</li>
+                <li>Сколько часов ты можешь уделить изучению экологии в неделю?</li>
+            </random>
+        </template>
+    </category>
+    <category>
+        <pattern>AGE</pattern>
+        <template>
+            <random>
+                <li>Сколько тебе лет?</li>
+                <li>Какой твой возраст?</li>
+            </random>
+        </template>
+    </category>
+    <category>
+        <pattern>EDUCATION</pattern>
+        <template>
+            <random>
+                <li>Какое у тебя образование?</li>
+                <li>Какое последнее учреждение ты закончил?</li>
+                <li>Какое образование у тебя на данный момент?</li>
+            </random>
+        </template>
+    </category>
+    <category>
+        <pattern>RESULT</pattern>
+        <template>
+            <random>
+                <li>Я нашел следующие возможности для образования:</li>
+                <li>Я думаю тебе стоит ознакомиться со следующими возможностями:</li>
+                <li>После поиска я думаю, что тебе стоит ознакомиться со следующими организациями:</li>
+            </random>
+        </template>
+
+    </category>
+</aiml>
