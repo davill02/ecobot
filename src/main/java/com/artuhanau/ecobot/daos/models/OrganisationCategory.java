@@ -18,6 +18,7 @@ import javax.persistence.Id;
 @Entity
 public class OrganisationCategory {
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @CsvBindByName(column = "category_id")
     private Long id;
     @CsvBindByName(column = "category_name")

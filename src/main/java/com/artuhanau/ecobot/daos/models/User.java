@@ -34,4 +34,6 @@ public class User {
     private EducationStep step;
     @ManyToMany(fetch = FetchType.EAGER)
     private List<DialogCommand> history;
+    @OneToOne(cascade = CascadeType.ALL)
+    private UserData userData;
 }

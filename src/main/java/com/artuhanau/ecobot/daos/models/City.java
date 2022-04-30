@@ -18,6 +18,7 @@ import javax.persistence.Id;
 @NoArgsConstructor
 public class City {
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @CsvBindByName(column = "city_id")
     private Integer id;
     @CsvBindByName(column = "city_name")

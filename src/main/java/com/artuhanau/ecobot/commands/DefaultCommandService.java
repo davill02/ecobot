@@ -2,10 +2,8 @@ package com.artuhanau.ecobot.commands;
 
 import com.artuhanau.ecobot.daos.models.City;
 import com.artuhanau.ecobot.daos.models.EducationalOrganisation;
+import com.artuhanau.ecobot.daos.models.SavingService;
 import com.artuhanau.ecobot.daos.models.TrainingFormat;
-import com.artuhanau.ecobot.daos.models.repos.CityRepository;
-import com.artuhanau.ecobot.daos.models.repos.EducationalOrganisationRepository;
-import com.artuhanau.ecobot.daos.models.repos.TrainingFormatRepository;
 import com.artuhanau.ecobot.daos.models.repos.UserRepository;
 import com.opencsv.bean.CsvToBeanBuilder;
 import org.slf4j.Logger;
@@ -40,13 +38,7 @@ public class DefaultCommandService implements CommandService
     private UserRepository userRepository;
 
     @Resource
-    private CityRepository cityRepository;
-
-    @Resource
-    private EducationalOrganisationRepository organisationRepository;
-
-    @Resource
-    private TrainingFormatRepository trainingFormatRepository;
+    private SavingService savingService;
 
     @PostConstruct
     public void initialize()
@@ -139,38 +131,19 @@ public class DefaultCommandService implements CommandService
             }
             if (fileName.toLowerCase(Locale.ROOT).contains("city")) {
                 List<City> cities = getParse(file, City.class);
-                cityRepository.saveAll(cities);
+                cities.forEach(city -> savingService.saveCity(city));
             }
             if (fileName.toLowerCase(Locale.ROOT).contains("organisation")) {
                 List<EducationalOrganisation> organisations = getParse(file, EducationalOrganisation.class);
-                organisations.forEach(this::setNullsForOrganisation);
-                organisationRepository.saveAll(organisations);
+                organisations.forEach(organisation -> savingService.saveOrganisation(organisation));
             }
             if (fileName.toLowerCase(Locale.ROOT).contains("trainingformat")) {
                 List<TrainingFormat> trainingFormats = getParse(file, TrainingFormat.class);
-                trainingFormats.forEach(trainingFormat -> {
-                    if (trainingFormat.getOrganisation().getId() == null) {
-                        trainingFormat.setOrganisation(null);
-                    }
-                    else {
-                        setNullsForOrganisation(trainingFormat.getOrganisation());
-                    }
-                });
-                trainingFormatRepository.saveAll(trainingFormats);
+                trainingFormats.forEach(trainingFormat -> savingService.saveTrainingFormat(trainingFormat));
             }
         }
         catch (Exception e) {
             LOG.error(e.getMessage(), e);
-        }
-    }
-
-    private void setNullsForOrganisation(final EducationalOrganisation organisation)
-    {
-        if (organisation.getCity().getId() == null) {
-            organisation.setCity(null);
-        }
-        if (organisation.getCategory().getId() == null) {
-            organisation.setCategory(null);
         }
     }
 

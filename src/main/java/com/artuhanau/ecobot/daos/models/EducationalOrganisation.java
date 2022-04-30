@@ -18,20 +18,19 @@ import java.util.List;
 @Entity
 public class EducationalOrganisation {
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @CsvBindByName(column = "organisation_id")
     private Long id;
     @CsvBindByName(column = "organisation_name")
     private String name;
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @CsvRecurse
     private City city;
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @CsvRecurse
     private OrganisationCategory category;
     @OneToMany
     private List<TrainingFormat> formats;
     @CsvBindByName
     private URL site;
-    @CsvBindByName
-    private String address;
 }

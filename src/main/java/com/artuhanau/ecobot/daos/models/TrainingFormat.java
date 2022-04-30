@@ -20,6 +20,7 @@ import java.util.List;
 public class TrainingFormat
 {
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @CsvBindByName(column = "training_format_id")
     private Long id;
 
@@ -45,6 +46,7 @@ public class TrainingFormat
     private String formatName;
 
     @CsvBindByName
+    @Column(length = 1000)
     private String description;
 
     @CsvBindByName
@@ -59,4 +61,8 @@ public class TrainingFormat
     @ManyToOne
     @CsvRecurse
     private EducationalOrganisation organisation;
+
+    @ManyToOne
+    @CsvRecurse
+    private Address address;
 }
