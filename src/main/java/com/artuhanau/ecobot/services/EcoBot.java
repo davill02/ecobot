@@ -1,5 +1,9 @@
 package com.artuhanau.ecobot.services;
 
+import java.util.ArrayList;
+import java.util.List;
+import javax.annotation.Resource;
+
 import com.artuhanau.ecobot.commands.CommandService;
 import com.artuhanau.ecobot.configs.BotConfigs;
 import lombok.SneakyThrows;
@@ -19,34 +23,38 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
-import javax.annotation.Resource;
-
 @Component
-public class EcoBot extends TelegramLongPollingBot {
+public class EcoBot extends TelegramLongPollingBot
+{
     @Resource
     private MessageService messageService;
+
     @Resource
     private CommandService commandService;
+
     @Resource
     private BotConfigs botConfigs;
+
     @Resource
     private ApplicationContext context;
 
     @Override
-    public String getBotUsername() {
+    public String getBotUsername()
+    {
         return botConfigs.getBotName();
     }
 
     @Override
-    public String getBotToken() {
+    public String getBotToken()
+    {
         return botConfigs.getBotToken();
     }
 
-
     @SneakyThrows
     @Override
-    public void onUpdateReceived(Update update) {
-        Object executableResponse = null;
+    public void onUpdateReceived(Update update)
+    {
+        List<Object> executableResponse = new ArrayList<>();
         String fileName = "";
         if (update.hasMessage()) {
             Message message = update.getMessage();
@@ -54,15 +62,25 @@ public class EcoBot extends TelegramLongPollingBot {
                 fileName = message.getDocument().getFileName();
             }
             if (commandService.isCommand(message) && commandService.isEligibleUser(message)) {
-                executableResponse = commandService.getTelegramExecutableResponse(message);
-            } else {
+                executableResponse.add(commandService.getTelegramExecutableResponse(message));
+            }
+            else {
                 executableResponse = messageService.createResponse(message);
             }
         }
-        execute(executableResponse, fileName);
+        final String finalFileName = fileName;
+        executableResponse.forEach(e -> {
+            try {
+                execute(e, finalFileName);
+            }
+            catch (TelegramApiException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
     }
 
-    private void execute(Object executableAction, String fileName) throws TelegramApiException {
+    private void execute(Object executableAction, String fileName) throws TelegramApiException
+    {
         if (executableAction == null) {
             return;
         }
@@ -78,12 +96,14 @@ public class EcoBot extends TelegramLongPollingBot {
         }
     }
 
-    @EventListener({ContextRefreshedEvent.class})
-    public void initialize() throws TelegramApiException {
+    @EventListener({ ContextRefreshedEvent.class })
+    public void initialize() throws TelegramApiException
+    {
         TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);
         try {
             telegramBotsApi.registerBot(this);
-        } catch (TelegramApiRequestException ignored) {
+        }
+        catch (TelegramApiRequestException ignored) {
 
         }
     }

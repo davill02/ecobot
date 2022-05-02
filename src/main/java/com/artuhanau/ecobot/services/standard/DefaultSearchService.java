@@ -40,9 +40,9 @@ public class DefaultSearchService implements SearchService
     @Override
     public boolean isEligibleForSearch(final UserData userData, List<DialogCommand> history)
     {
-        boolean cityEligible = userData.getCityName() != null && countOfCommandInHistory(history, "LOCATION") > 3;
+        boolean cityEligible = userData.getCityName() != null || countOfCommandInHistory(history, "LOCATION") >= 3;
         boolean educationEligible = userData.getEducationStep() != null;
-        boolean paidEligible = userData.getPaid() != null && countOfCommandInHistory(history, "COST") > 2;
+        boolean paidEligible = userData.getPaid() != null || countOfCommandInHistory(history, "COST") >= 2;
         boolean otherEligible = userData.getHoursPerWeek() != null || countOfCommandInHistory(history,"TIME") > 0;
         return paidEligible && cityEligible && educationEligible && otherEligible;
     }

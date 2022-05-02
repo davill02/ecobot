@@ -44,7 +44,7 @@ public class StandfordEntitiesAndRelationsService implements EntitiesAndRelation
         stanfordCoreNLP.annotate(coreDocument);
         coreDocument.entityMentions().forEach(coreEntityMention ->
         {
-            if (coreEntityMention.entityType().equals("CITY")) {
+            if (coreEntityMention.entityType().equals("CITY")  || coreEntityMention.entityType().equals("LOCATION")) {
                 userData.setCityName(coreEntityMention.entity());
             }
             if (coreEntityMention.entityType().equals("PERSON")) {

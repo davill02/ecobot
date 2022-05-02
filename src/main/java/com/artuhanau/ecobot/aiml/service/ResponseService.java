@@ -1,5 +1,17 @@
 package com.artuhanau.ecobot.aiml.service;
 
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+
 import com.artuhanau.ecobot.daos.models.DialogCommand;
 import com.artuhanau.ecobot.daos.models.TrainingFormat;
 import com.artuhanau.ecobot.daos.models.User;
@@ -8,19 +20,12 @@ import com.artuhanau.ecobot.services.UserManagerService;
 import org.alicebot.ab.Bot;
 import org.alicebot.ab.Chat;
 import org.alicebot.ab.configuration.BotConfiguration;
-import org.checkerframework.checker.units.qual.C;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import javax.naming.ldap.PagedResultsControl;
-import java.nio.file.Paths;
-import java.util.List;
 
 @Component
 public class ResponseService
@@ -42,9 +47,20 @@ public class ResponseService
 
     private Bot bot;
 
+    private Map<String, Long> countableCommandsAndMaxCount;
+
+    private List<String> questionCommands;
+
+    @Value("${question.commands}")
+    private String questions;
+
     @PostConstruct
     public void init()
     {
+        countableCommandsAndMaxCount = new HashMap<>();
+        countableCommandsAndMaxCount.put("COST", 2L);
+        countableCommandsAndMaxCount.put("LOCATION", 3L);
+        questionCommands = Arrays.asList(StringUtils.splitPreserveAllTokens(questions, ','));
         BotConfiguration botConfigs = BotConfiguration.builder().maxHistory(10)
             .path(Paths.get("src/main/resources/").toAbsolutePath().toString()).name("aimlbot").build();
         bot = new Bot(botConfigs);
@@ -52,24 +68,34 @@ public class ResponseService
             .orElseThrow(() -> new IllegalArgumentException(UNKNOWN_COMMAND + " is not found"));
     }
 
-    public String createResponse(User user, String info, String command)
+    public List<Object> createResponse(User user, String info, String command, Long chatId)
     {
         Chat chat = new Chat(bot);
-        String responseCommand = "";
-        if("NEW_JOIN".equals(info)){
-            responseCommand = "INTRODUCTION";
+        List<String> responseCommands = new ArrayList<>();
+        if (command.equals("/start")) {
+            responseCommands.add("INTRODUCTION");
+            responseCommands.add("AIM");
+            userManagerService.cleanUpUserHistory(user);
+            responseCommands.add(getRandomDialogCommand(user));
         }
-        if(responseCommand.isEmpty()){
-            responseCommand = command;
-        }
-        user.getHistory().add(dialogCommandRepository.getFirstByCommand(responseCommand).orElse(unknownCommand));
-        if (user.getHistory().size() > maxUserHistory) {
-            user.getHistory().remove(0);
+        if (responseCommands.isEmpty()) {
+            responseCommands.add(getRandomDialogCommand(user));
         }
         userManagerService.saveUser(user);
-        String response = chat.multisentenceRespond(responseCommand);
-        LOGGER.info("{}: {}", user.getTelegramId(), response);
-        return response.replace("I have no answer for that.","");
+        return responseCommands.stream()
+            .peek(s -> {
+                String commandName = StringUtils.splitByWholeSeparatorPreserveAllTokens(s, " ")[0];
+                LOGGER.info("{}: COMMAND {}", user.getTelegramId(), s);
+                user.getHistory().add(dialogCommandRepository.getFirstByCommand(commandName).orElse(unknownCommand));
+                if (user.getHistory().size() > maxUserHistory) {
+                    user.getHistory().remove(0);
+                }
+                userManagerService.saveUser(user);
+            })
+            .map(chat::multisentenceRespond)
+            .peek(s -> LOGGER.info("{}: {}", user.getTelegramId(), s))
+            .map(s -> SendMessage.builder().chatId(String.valueOf(chatId)).text(s).build())
+            .collect(Collectors.toList());
     }
 
     public SendMessage createResultResponse(List<TrainingFormat> trainingFormatList)
@@ -95,6 +121,42 @@ public class ResponseService
             return stringBuffer;
         }
         return stringBuffer.append(textTitle).append(info).append("\n");
+    }
+
+    public String getRandomDialogCommand(User user)
+    {
+        List<String> commandsToExclude = user.getHistory().stream()
+            .map(DialogCommand::getCommand)
+            .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+            .entrySet()
+            .stream()
+            .filter(commandAndCount -> {
+                Long maxCount = countableCommandsAndMaxCount.get(commandAndCount.getKey());
+                if (maxCount == null) {
+                    return true;
+                }
+                return maxCount <= commandAndCount.getValue();
+            })
+            .map(Map.Entry::getKey)
+            .filter(command -> !("LOCATION".equals(command) && user.getUserData().getCityName() != null))
+            .filter(command -> !("COST".equals(command) && user.getUserData().getPaid() != null))
+            .collect(Collectors.toList());
+        List<String> relevantCommands = new ArrayList<>(questionCommands);
+        relevantCommands.removeAll(commandsToExclude);
+        String randomCommand = "RESULT";
+        if (!relevantCommands.isEmpty()) {
+            Random rand = new Random();
+            int random = rand.nextInt(relevantCommands.size());
+            randomCommand = relevantCommands.get(random);
+        }
+        if (countableCommandsAndMaxCount.get(randomCommand) != null) {
+            final String finalRandomCommand = randomCommand;
+            long count = user.getHistory().stream().map(DialogCommand::getCommand)
+                .filter(s -> s.equals(finalRandomCommand))
+                .count();
+            randomCommand = String.format("%s %d @", randomCommand, count + 1);
+        }
+        return randomCommand;
     }
 }
 
