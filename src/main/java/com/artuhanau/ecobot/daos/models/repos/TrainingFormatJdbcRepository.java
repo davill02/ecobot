@@ -35,9 +35,9 @@ public class TrainingFormatJdbcRepository
         MapSqlParameterSource sqlParameterSource = new MapSqlParameterSource();
         stringBuilder.append(
             "SELECT tf.id  FROM training_format as tf JOIN educational_organisation AS eo ON eo.id = tf.organisation_id JOIN city ON eo.city_id = city.id WHERE "
-        ).append(" (tf.is_only_high_education = :high or tf.is_only_middle_education = :middle) ");
+        ).append(" (tf.is_only_high_education = :high and tf.is_only_middle_education = :middle) ");
         sqlParameterSource = getMapSqlParameterSourceWithEducationParams(userData, sqlParameterSource);
-        if (userData.getPaid() != null) {
+        if (userData.getPaid()!= null && !userData.getPaid()) {
             stringBuilder.append(" and tf.is_paid = :paid ");
             sqlParameterSource = sqlParameterSource.addValue("paid", userData.getPaid());
         }
@@ -46,10 +46,10 @@ public class TrainingFormatJdbcRepository
             sqlParameterSource = sqlParameterSource.addValue("city", userData.getCityName());
         }
         if (userData.getHoursPerWeek() != null) {
-            stringBuilder.append(" AND tf.hours_per_week =< :hour ");
+            stringBuilder.append(" AND tf.hours_per_week <= :hour ");
             sqlParameterSource = sqlParameterSource.addValue("hour", userData.getHoursPerWeek());
         }
-        stringBuilder.append(" ORDER BY tf.boost_value DESC ");
+        stringBuilder.append(" ORDER BY tf.boost_value, city.name_english  DESC ");
         LOG.info(stringBuilder.toString());
         return jdbcTemplate.queryForList(stringBuilder.toString(), sqlParameterSource, Long.class);
     }
@@ -62,12 +62,7 @@ public class TrainingFormatJdbcRepository
             high = true;
         }
         if (userData.getEducationStep() == EducationStep.SCHOOL) {
-            high = true;
             middle = true;
-        }
-        if (userData.getEducationStep() == EducationStep.OTHER) {
-            high = false;
-            middle = false;
         }
         sqlParameterSource = sqlParameterSource.addValue("high", high ).addValue("middle", middle);
         return sqlParameterSource;

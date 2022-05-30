@@ -141,6 +141,7 @@ public class DefaultCommandService implements CommandService
                 List<TrainingFormat> trainingFormats = getParse(file, TrainingFormat.class);
                 trainingFormats.forEach(trainingFormat -> savingService.saveTrainingFormat(trainingFormat));
             }
+            LOG.info("Update is ended");
         }
         catch (Exception e) {
             LOG.error(e.getMessage(), e);

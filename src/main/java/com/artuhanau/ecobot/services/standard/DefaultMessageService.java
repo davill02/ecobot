@@ -43,6 +43,12 @@ public class DefaultMessageService implements MessageService
     @Value("${bot.telegram.feed.users}")
     private String feedUsers;
 
+    @Value("${telegram.commands}")
+    private String telegramCommands;
+
+    @Value("${question.commands}")
+    private String commands;
+
     @Override
     public List<Object> createResponse(Message message)
     {
@@ -55,13 +61,25 @@ public class DefaultMessageService implements MessageService
         }
         else {
             UserData userData = user.getUserData();
-            entitiesAndRelationsService.fillEntities(user, translationService.translateToEnglish(message.getText()));
-            if (searchService.isEligibleForSearch(userData, user.getHistory())) {
-                List<TrainingFormat> trainingFormatList = searchService.search(userData);
-                return wrapSendMessage(responseService.createResultResponse(trainingFormatList));
+            if (!user.getHistory().isEmpty() && commands.contains(
+                user.getHistory().get(user.getHistory().size() - 1).getCommand().getCommand()) && !telegramCommands.contains(
+                message.getText())) {
+                userData = updateEntries(message, user, userData);
+                if (searchService.isEligibleForSearch(userData, user.getHistory())) {
+                    List<TrainingFormat> trainingFormatList = searchService.search(userData);
+                    LOG.info("Name: {}, Duration: {} hours, City: {}, EducationStep: {}, Paid: {}", user.getName(),
+                        userData.getHoursPerWeek(), userData.getCityName(), userData.getEducationStep(), userData.getPaid());
+                    return wrapSendMessage(responseService.createResultResponse(trainingFormatList, message.getChatId()));
+                }
             }
             return responseService.createResponse(user, "", message.getText(), message.getChatId());
         }
+    }
+
+    private UserData updateEntries(final Message message, final User user, UserData userData)
+    {
+        userData = entitiesAndRelationsService.fillEntities(user, translationService.translateToEnglish(message.getText()));
+        return userData;
     }
 
     @Override

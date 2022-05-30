@@ -25,4 +25,6 @@ public class City {
     private String name;
     @CsvBindByName(column = "city_name_en")
     private String nameEnglish;
+    @CsvBindByName
+    private String nameTranslitEn;
 }

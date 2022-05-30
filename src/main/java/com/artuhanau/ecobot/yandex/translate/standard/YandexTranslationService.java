@@ -39,6 +39,7 @@ public class YandexTranslationService implements TranslationService {
         } catch (IOException exception) {
             LOG.error(exception.getMessage());
         }
+        LOG.info("Translated text: {}", translatedText);
         return translatedText;
     }
 
